@@ -70,7 +70,7 @@ service:
  ########################## Enable Ingress " ######################################## 
 
 ingress:
-  enabled: false
+  enabled: true
   className: nginx-public  ### optional default nginx-public
   hosts:
     - host: testing123.bold.com        
