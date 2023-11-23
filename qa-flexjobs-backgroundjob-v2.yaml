@@ -1,0 +1,183 @@
+# Default values for Generic Helm Chart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+# Name for resources will be deployed using release name.
+
+namespace: datascience
+replicaCount: 3
+
+#label: sample-instance
+###############################  Container Specifications image container ports ##################################################3
+
+image:
+  repository: nginx
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "latest" 
+containerPorts:
+        - containerPort: 80
+          name: http
+        # - containerPort: 8080
+        #   name: jenkins
+
+#######################################################################################################################################
+
+imagePullSecrets:
+    enabled: false
+    name: boldinfra-registry
+    
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount: {}
+  # Specifies whether a service account should be created
+ # create: false
+  # Annotations to add to the service account
+ # annotations: {}
+  # The name of the service account to use.
+  # If not set and create is false, a name is generated using the fullname template
+  #name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: false
+  # runAsNonRoot: false
+  # runAsUser: 1000
+
+############################ Create Service ClusterIP Or LoadBalancer ##########################################3
+service:
+  enabled: true
+  svcports:
+  - sourceport: 80
+    targetport: 80
+    name: http
+  # - sourceport: 443
+  #   targetport: 443
+  #   name: https
+  # type: ProvideType-optional  ## By default cluster IP will be deployed
+
+
+  
+
+
+ ########################## Enable Ingress " ######################################## 
+
+ingress:
+  enabled: false
+  className: nginx-public  ### optional default nginx-public
+  hosts:
+    - host: testing123.bold.com        
+      secretName: aks-ingress-bold-san ### optional default bold-san
+    - host: testing1234.bold.comm        
+      secretName: aks-ingress-bold-san ### optional default bold-san        
+  
+################ define container compute #####################################################################################
+
+resources:
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  limits:
+    cpu: 1
+    memory: 2Gi
+  requests:
+    cpu: 100m
+    memory: 500Mi
+
+##############################   HPA config #####################################################################################
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 2
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 90
+
+################################# Select taint and toleration ####################################################################
+Taint:
+  enabled: false
+nodeSelector:
+  Team: DataScience
+tolerations:
+- key: "Application"
+  operator: "Equal"
+  value: "DataScience"
+  effect: "NoSchedule"
+
+affinity: {}
+
+#####################################  PVC config ##########################################################################
+persistence:
+   enabled: false
+pvc:
+- name: data
+  mount: /app/data
+  storage: 10Gi
+  sc:
+    name: retain-azurefile-csi
+
+
+##################################################################################################################3
+####################### This is optional (exisitingPvc) and can be used in emergency situations if existing PVC required to be mount, can also be used with new PVC as well as standalone ####
+############################### It will not be managed by helm chart and will treat as a separate object
+############################ Comment pvc: and its values above if new PVC is not needed. 
+
+
+exisitingPvc: {}
+#   enabled: false
+# pvcold:
+#   - name: existing_pvc_name
+#     mount: /mount/path
+
+###############################  Defind environment variables ################################################
+
+envvariable:
+  enabled: false
+environmentvariable:         
+          - name: "DEPLOYMENT"
+            value: "QA"
+          - name: "WEB_CONCURRENCY"
+            value: "1"
+          - name: "MODULE_NAME"
+            value: "app"
+          - name: "LOG_LEVEL"
+            value: "info"
+          - name: "THREADS_PER_WORKER"
+            value: "1"
+          - name: "NEW_RELIC_LICENSE_KEY"
+            value: "***************"
+          - name: NEW_RELIC_ENABLE
+            value: "False"
+          - name: NEW_RELIC_APP_NAME
+            value: "testing01"
+
+################################### Probes set ##################################################################################################
+
+probes:
+  enabled: false
+livenessProbe:          
+          path: /v1/health
+          port: 80
+          scheme: HTTP                           
+readinessProbe:
+          path: /v1/health
+          port: 80
+          scheme: HTTP
+                   
+
+############### Add commands to the container optional  ##########################
+
+command:
+  enabled: false
+
+##########  Config Map #####################################################################################################################
+configMap:
+  enabled: false
+  
